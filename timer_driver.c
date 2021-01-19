@@ -380,11 +380,14 @@ ssize_t timer_read(struct file *pfile, char __user *buffer, size_t length, loff_
 	minutes = (unsigned int) ( hours - ( num_of_cycles / 100000 )  / 60 ); 
 	seconds = (unsigned int)  ( minutes - num_of_cycles / 100000 ); 
 	
-	len = scnprintf(buff, 30, "%u:%u:%u:%u", days, hours, minutes, seconds);
+	scnprintf(buff, 30, "%u:%u:%u:%u", days, hours, minutes, seconds);
+	len = strlen( buff );
+
 	ret = copy_to_user(buffer, buff, len);
 	
 	if ( ret )
 		return -EFAULT;
+
 	return len;
 }
 
@@ -398,12 +401,13 @@ ssize_t timer_write(struct file *pfile, const char __user *buffer, size_t length
 	unsigned int seconds = 0;
 	int ret = 0;
 	int n_param;
+
 	ret = copy_from_user(buff, buffer, length);
 	if(ret)
 		return -EFAULT;
 	buff[length] = '\0';
 
-	if( !strcmp(buff,"start") )
+	if( !strncmp( "start", buff,  5) )
 	{
 		if( n_param == 0 )
 			printk(KERN_ERR "Please insert dd:hh:mm:ss first\n");
@@ -412,7 +416,7 @@ ssize_t timer_write(struct file *pfile, const char __user *buffer, size_t length
 		else
 			start();
 	}
-	else if( !strcmp(buff,"stop") )
+	else if( !strncmp( "stop", buff, 4) )
 	{
 		if( n_param == 0 )
 			printk(KERN_ERR "Please insert dd:hh:mm:ss first\n");
@@ -423,8 +427,8 @@ ssize_t timer_write(struct file *pfile, const char __user *buffer, size_t length
 	}
 	else
 	{
-		n_param = sscanf(buff,"%u:%u:%u:%u",&days, &hours, &minutes, &seconds);
-		if(n_param == 4)
+		n_param = sscanf( buff, "%u:%u:%u:%u", &days, &hours, &minutes, &seconds);
+		if( n_param == 4 )
 		{
 			milliseconds = days * hours * minutes * seconds * 1000;
 			setup(milliseconds);

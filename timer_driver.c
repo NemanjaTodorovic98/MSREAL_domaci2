@@ -366,7 +366,7 @@ ssize_t timer_read(struct file *pfile, char __user *buffer, size_t length, loff_
 	u32 days = 0;
 	u32 hours = 0;	
 	u32 minutes = 0;
-	u32 seconds = 0;
+	u64 seconds = 0;
 
 	u32 timer0_data;
 	u32 timer1_data;
@@ -380,13 +380,15 @@ ssize_t timer_read(struct file *pfile, char __user *buffer, size_t length, loff_
 	timer1_data = ioread32(tp->base_addr + XIL_AXI_TIMER_TCR1_OFFSET);
 	
 	num_of_cycles = (u64) timer0_data + ( ( (u64) timer1_data ) << 32 );
-	
+	/*
 	days = (u32) ( ( num_of_cycles / 100000 )  /  ( 60 * 60 * 24 ) ); 
 	hours = (u32) ( ( num_of_cycles / 100000 )  /  ( 60 * 60 ) - days * 24); 
 	minutes = (u32) ( ( num_of_cycles / 100000 )  / 60  - ( days * 60 * 24 + hours * 60 )); 
 	seconds = (u32)  ( num_of_cycles / 100000  - ( minutes * 60 + days * 24 * 60 * 60 + hours * 60 * 60 )); 
-	
-	scnprintf(buff, BUFF_SIZE, "%u:%u:%u:%u", days, hours, minutes, seconds);
+	*/
+	//scnprintf(buff, BUFF_SIZE, "%u:%u:%u:%u", days, hours, minutes, seconds);
+	seconds = num_of_cycles; 
+	scnprintf(buff, BUFF_SIZE, "%llu",seconds);
 	len = strlen( buff );
 
 	ret = copy_to_user(buffer, buff, len);

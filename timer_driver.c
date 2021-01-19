@@ -64,6 +64,7 @@ static struct cdev *my_cdev;
 static struct timer_info *tp = NULL;
 
 unsigned char running = 0;
+int endRead = 0;
 
 
 static irqreturn_t xilaxitimer_isr(int irq,void*dev_id);
@@ -108,7 +109,7 @@ MODULE_DEVICE_TABLE(of, timer_of_match);
 
 static irqreturn_t xilaxitimer_isr(int irq,void*dev_id)		
 {      
-	unsigned int timer_data = 0;
+	u32 timer_data = 0;
 
 
 	// Clear Interrupt
@@ -136,16 +137,16 @@ static irqreturn_t xilaxitimer_isr(int irq,void*dev_id)
 static void setup(unsigned long milliseconds)
 {
 	// Disable Timer Counter
-	unsigned int timer0_load;
-	unsigned int timer1_load;
-	unsigned int timer0_reg;
-	unsigned int timer1_reg;
+	u32 timer0_load;
+	u32 timer1_load;
+	u32 timer0_reg;
+	u32 timer1_reg;
 
-	unsigned long num_of_cycles;
+	u64 num_of_cycles;
 	num_of_cycles = milliseconds * 100000;
 	
-	timer0_load = (unsigned int) num_of_cycles;
-	timer1_load = (unsigned int) (num_of_cycles >> 32);
+	timer0_load = (u32) num_of_cycles;
+	timer1_load = (u32) (num_of_cycles >> 32);
 
 	/*
 	unsigned long days, hours, minuts, seconds;
@@ -219,8 +220,8 @@ static void setup(unsigned long milliseconds)
 
 static void start(void)
 {
-	unsigned int timer0_reg;
-	unsigned int timer1_reg;
+	u32 timer0_reg;
+	u32 timer1_reg;
 
 	timer0_reg = ioread32(tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
 	timer1_reg = ioread32(tp->base_addr + XIL_AXI_TIMER_TCSR1_OFFSET);
@@ -233,8 +234,8 @@ static void start(void)
 
 static void stop(void)
 {
-	unsigned int timer0_reg;
-	unsigned int timer1_reg;
+	u32 timer0_reg;
+	u32 timer1_reg;
 
 	timer0_reg = ioread32(tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
 	timer1_reg = ioread32(tp->base_addr + XIL_AXI_TIMER_TCSR1_OFFSET);
@@ -321,7 +322,7 @@ error1:
 static int timer_remove(struct platform_device *pdev)
 {
 	// Disable timer
-	unsigned int data=0;
+	u32 data=0;
 	data = ioread32(tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
 	iowrite32(data & ~(XIL_AXI_TIMER_CSR_ENABLE_TMR_MASK),
 			tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
@@ -361,24 +362,29 @@ ssize_t timer_read(struct file *pfile, char __user *buffer, size_t length, loff_
 	int ret;
 	long int len;
 	printk(KERN_ERR "USO SAM\n");
-	unsigned long num_of_cycles = 0;
-	unsigned int days = 0;
-	unsigned int hours = 0;	
-	unsigned int minutes = 0;
-	unsigned int seconds = 0;
+	u64 num_of_cycles;
+	u32 days = 0;
+	u32 hours = 0;	
+	u32 minutes = 0;
+	u32 seconds = 0;
 
-	unsigned int timer0_data;
-	unsigned int timer1_data;
+	u32 timer0_data;
+	u32 timer1_data;
+
+	if (endRead){
+		endRead = 0;
+		return 0;
+	}
 
 	timer0_data = ioread32(tp->base_addr + XIL_AXI_TIMER_TCR0_OFFSET);
 	timer1_data = ioread32(tp->base_addr + XIL_AXI_TIMER_TCR1_OFFSET);
 	
-	num_of_cycles = (unsigned long) timer0_data + ( ( (unsigned long) timer1_data ) << 32 );
+	num_of_cycles = (u64) timer0_data + ( ( (u64) timer1_data ) << 32 );
 	
-	days = (unsigned int) ( ( num_of_cycles / 100000 )  /  ( 60 * 60 * 24 ) ); 
-	hours = (unsigned int) ( ( num_of_cycles / 100000 )  /  ( 60 * 60 ) - days * 24); 
-	minutes = (unsigned int) ( ( num_of_cycles / 100000 )  / 60  - ( days * 60 * 24 + hours * 60 )); 
-	seconds = (unsigned int)  ( num_of_cycles / 100000  - ( minutes * 60 + days * 24 * 60 * 60 + hours * 60 * 60 )); 
+	days = (u32) ( ( num_of_cycles / 100000 )  /  ( 60 * 60 * 24 ) ); 
+	hours = (u32) ( ( num_of_cycles / 100000 )  /  ( 60 * 60 ) - days * 24); 
+	minutes = (u32) ( ( num_of_cycles / 100000 )  / 60  - ( days * 60 * 24 + hours * 60 )); 
+	seconds = (u32)  ( num_of_cycles / 100000  - ( minutes * 60 + days * 24 * 60 * 60 + hours * 60 * 60 )); 
 	
 	scnprintf(buff, BUFF_SIZE, "%u:%u:%u:%u", days, hours, minutes, seconds);
 	len = strlen( buff );
@@ -390,17 +396,19 @@ ssize_t timer_read(struct file *pfile, char __user *buffer, size_t length, loff_
 
 	printk(KERN_ERR "IZASO SAM\n");
 
+	endRead = 1;
+
 	return len;
 }
 
 ssize_t timer_write(struct file *pfile, const char __user *buffer, size_t length, loff_t *offset) 
 {
 	char buff[BUFF_SIZE];
-	unsigned long milliseconds = 0;
-	unsigned int days = 0;
-	unsigned int hours = 0;	
-	unsigned int minutes = 0;
-	unsigned int seconds = 0;
+	u64 milliseconds = 0;
+	u32 days = 0;
+	u32 hours = 0;	
+	u32 minutes = 0;
+	u32 seconds = 0;
 	int ret = 0;
 	int n_param;
 

@@ -65,7 +65,7 @@ static struct timer_info *tp = NULL;
 
 unsigned char running = 0;
 int endRead = 0;
-
+int n_param = 0;
 
 static irqreturn_t xilaxitimer_isr(int irq,void*dev_id);
 static int timer_probe(struct platform_device *pdev);
@@ -412,7 +412,7 @@ ssize_t timer_write(struct file *pfile, const char __user *buffer, size_t length
 	u32 minutes = 0;
 	u32 seconds = 0;
 	int ret = 0;
-	int n_param;
+
 
 	ret = copy_from_user(buff, buffer, length);
 

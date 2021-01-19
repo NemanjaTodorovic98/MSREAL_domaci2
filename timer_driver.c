@@ -345,13 +345,13 @@ static int timer_remove(struct platform_device *pdev)
 
 int timer_open(struct inode *pinode, struct file *pfile) 
 {
-	//printk(KERN_INFO "Succesfully opened timer\n");
+	printk(KERN_INFO "Succesfully opened timer\n");
 	return 0;
 }
 
 int timer_close(struct inode *pinode, struct file *pfile) 
 {
-	//printk(KERN_INFO "Succesfully closed timer\n");
+	printk(KERN_INFO "Succesfully closed timer\n");
 	return 0;
 }
 
@@ -403,8 +403,10 @@ ssize_t timer_write(struct file *pfile, const char __user *buffer, size_t length
 	int n_param;
 
 	ret = copy_from_user(buff, buffer, length);
+
 	if(ret)
 		return -EFAULT;
+
 	buff[length - 1] = '\0';
 
 	if( !strncmp( "start", buff,  5) )

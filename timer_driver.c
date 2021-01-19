@@ -41,7 +41,7 @@
 #define XIL_AXI_TIMER_CSR_DOWN_COUNT_MASK 	0x00000002
 #define XIL_AXI_TIMER_CSR_CAPTURE_MODE_MASK 	0x00000001
 
-#define BUFF_SIZE 20
+#define BUFF_SIZE 40
 #define DRIVER_NAME "timer"
 #define DEVICE_NAME "xilaxitimer"
 
@@ -357,7 +357,7 @@ int timer_close(struct inode *pinode, struct file *pfile)
 
 ssize_t timer_read(struct file *pfile, char __user *buffer, size_t length, loff_t *offset) 
 {
-	char buff[30];
+	char buff[BUFF_SIZE];
 	int ret;
 	long int len;
 
@@ -380,7 +380,7 @@ ssize_t timer_read(struct file *pfile, char __user *buffer, size_t length, loff_
 	minutes = (unsigned int) ( hours - ( num_of_cycles / 100000 )  / 60 ); 
 	seconds = (unsigned int)  ( minutes - num_of_cycles / 100000 ); 
 	
-	scnprintf(buff, 30, "%u:%u:%u:%u", days, hours, minutes, seconds);
+	scnprintf(buff, BUFF_SIZE, "%u:%u:%u:%u", days, hours, minutes, seconds);
 	len = strlen( buff );
 
 	ret = copy_to_user(buffer, buff, len);
@@ -405,7 +405,7 @@ ssize_t timer_write(struct file *pfile, const char __user *buffer, size_t length
 	ret = copy_from_user(buff, buffer, length);
 	if(ret)
 		return -EFAULT;
-	buff[length] = '\0';
+	buff[length - 1] = '\0';
 
 	if( !strncmp( "start", buff,  5) )
 	{

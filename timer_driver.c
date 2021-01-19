@@ -360,7 +360,7 @@ ssize_t timer_read(struct file *pfile, char __user *buffer, size_t length, loff_
 	char buff[BUFF_SIZE];
 	int ret;
 	long int len;
-	printk(KERN_ERR "USO SAM\n);
+	printk(KERN_ERR "USO SAM\n");
 	unsigned long num_of_cycles = 0;
 	unsigned int days = 0;
 	unsigned int hours = 0;	
@@ -376,9 +376,9 @@ ssize_t timer_read(struct file *pfile, char __user *buffer, size_t length, loff_
 	num_of_cycles = (unsigned long) timer0_data + ( ( (unsigned long) timer1_data ) << 32 );
 	
 	days = (unsigned int) ( ( num_of_cycles / 100000 )  /  ( 60 * 60 * 24 ) ); 
-	hours = (unsigned int) ( days - ( num_of_cycles / 100000 )  /  ( 60 * 60 ) ); 
-	minutes = (unsigned int) ( hours - ( num_of_cycles / 100000 )  / 60 ); 
-	seconds = (unsigned int)  ( minutes - num_of_cycles / 100000 ); 
+	hours = (unsigned int) ( ( num_of_cycles / 100000 )  /  ( 60 * 60 ) - days * 24); 
+	minutes = (unsigned int) ( ( num_of_cycles / 100000 )  / 60  - ( days * 60 * 24 + hours * 60 )); 
+	seconds = (unsigned int)  ( num_of_cycles / 100000  - ( minutes * 60 + days * 24 * 60 * 60 + hours * 60 * 60 )); 
 	
 	scnprintf(buff, BUFF_SIZE, "%u:%u:%u:%u", days, hours, minutes, seconds);
 	len = strlen( buff );
@@ -388,7 +388,7 @@ ssize_t timer_read(struct file *pfile, char __user *buffer, size_t length, loff_
 	if ( ret )
 		return -EFAULT;
 
-	printk(KERN_ERR "IZASO SAM\n);
+	printk(KERN_ERR "IZASO SAM\n");
 
 	return len;
 }

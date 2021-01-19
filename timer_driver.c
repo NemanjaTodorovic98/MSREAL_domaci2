@@ -360,7 +360,7 @@ ssize_t timer_read(struct file *pfile, char __user *buffer, size_t length, loff_
 	char buff[BUFF_SIZE];
 	int ret;
 	long int len;
-
+	printk(KERN_ERR "USO SAM\n);
 	unsigned long num_of_cycles = 0;
 	unsigned int days = 0;
 	unsigned int hours = 0;	
@@ -387,6 +387,8 @@ ssize_t timer_read(struct file *pfile, char __user *buffer, size_t length, loff_
 	
 	if ( ret )
 		return -EFAULT;
+
+	printk(KERN_ERR "IZASO SAM\n);
 
 	return len;
 }

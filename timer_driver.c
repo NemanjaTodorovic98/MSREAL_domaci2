@@ -154,10 +154,6 @@ static void setup(u64 num_of_cycles)
 	timer1_load = (unsigned int) (num_of_cycles >> 32);
 	*/
 	
-	printk(KERN_INFO "number_of_cycles: %llu \n" , num_of_cycles);
-	printk(KERN_INFO "timer0_load: %u \n" , timer0_load);
-	printk(KERN_INFO "timer1_load: %u \n" , timer1_load);
-
 	
 	// DISABLE T0 and T1
 	timer0_reg = ioread32(tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
@@ -450,10 +446,9 @@ ssize_t timer_write(struct file *pfile, const char __user *buffer, size_t length
 			if( !running )
 			{
 				num_of_cycles = ( ( ( ( (unsigned long long) ( days * 24 + hours ) ) * 60 + minutes ) * 60 + seconds ) * FREQ ) ;
-				printk(KERN_INFO "days:  %u   ,hours:   %u   , minutes:  %u  , seconds:  %u   \n", days, hours, minutes, seconds ); 
-				printk(KERN_INFO "num_of_cycles: %llu \n", num_of_cycles);
 				setup(num_of_cycles);
 				printk(KERN_INFO "Timer initialized successfully!\n");
+				printk(KERN_INFO "Preset: %u d, %u h, %u m, %u s \n", days, hours, minutes, seconds ); 
 				running = 0;
 				correct_input = 1;
 			}
@@ -507,7 +502,6 @@ static int __init timer_init(void)
 		goto fail_2;
 	}
 	printk(KERN_INFO "xilaxitimer_init: Cdev added\n");
-	printk(KERN_NOTICE "xilaxitimer_init: Hello world\n");
 
 	return platform_driver_register(&timer_driver);
 
@@ -527,7 +521,6 @@ static void __exit timer_exit(void)
 	device_destroy(my_class, my_dev_id);
 	class_destroy(my_class);
 	unregister_chrdev_region(my_dev_id,1);
-	printk(KERN_INFO "xilaxitimer_exit: Goodbye, cruel world\n");
 }
 
 

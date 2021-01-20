@@ -463,7 +463,7 @@ ssize_t timer_write(struct file *pfile, const char __user *buffer, size_t length
 		n_param = sscanf( buff, "%u:%u:%u:%u", &days, &hours, &minutes, &seconds);
 		if( n_param == 4 )
 		{
-			num_of_cycles = ( ( ( days * 24 + hours ) * 60 + minutes ) * 60 + seconds ) * FREQ;
+			num_of_cycles = ( ( ( ( (unsigned long long) ( days * 24 + hours ) ) * 60 + minutes ) * 60 + seconds ) * FREQ ) ;
 			printk(KERN_INFO "days:  %u   ,hours:   %u   , minutes:  %u  , seconds:  %u   \n", days, hours, minutes, seconds ); 
 			printk(KERN_INFO "num_of_cycles: %llu \n", num_of_cycles);
 			num_of_cycles = 14294967296;  

@@ -115,6 +115,8 @@ static irqreturn_t xilaxitimer_isr(int irq,void*dev_id)
 	unsigned int timer1_data;
 	unsigned int timer1_data_again;
 
+	printk(KERN_INFO "interrupt occured\n");
+
 
 	// Clear Interrupt
 	timer_data = ioread32(tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
@@ -162,7 +164,7 @@ static void setup(u64 num_of_cycles)
 	timer0_load = (unsigned int) num_of_cycles;
 	timer1_load = (unsigned int) (num_of_cycles >> 32);
 	
-	printk(KERN_INFO "number_of_cycles: %llu \n" , number_of_cycles);
+	printk(KERN_INFO "number_of_cycles: %llu \n" , num_of_cycles);
 	printk(KERN_INFO "timer0_load: %u \n" , timer0_load);
 	printk(KERN_INFO "timer1_load: %u \n" , timer1_load);
 

@@ -64,6 +64,7 @@ static struct device *my_device;
 static struct cdev *my_cdev;
 static struct timer_info *tp = NULL;
 
+unsigned char correct_input = 0;
 unsigned char running = 0;
 int endRead = 0;
 int n_param = 0;
@@ -121,9 +122,12 @@ static irqreturn_t xilaxitimer_isr(int irq,void*dev_id)
 			tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
 
 	running = 0;
+	correct_input = 0;
 
 	timer_data = ioread32(tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
 	iowrite32(timer_data & ~(XIL_AXI_TIMER_CSR_ENABLE_TMR_MASK),tp->base_addr + XIL_AXI_TIMER_TCSR1_OFFSET);
+
+	printk(KERN_INFO "Timer is stopped!\n");
 
 	return IRQ_HANDLED;
 }
@@ -422,16 +426,16 @@ ssize_t timer_write(struct file *pfile, const char __user *buffer, size_t length
 
 	if( !strncmp( "start", buff,  5) )
 	{
-		if( n_param == 0 )
+		if( n_param == 0 || !correct_input )
 			printk(KERN_ERR "Please insert dd:hh:mm:ss first\n");
 		else if ( running )
 			printk(KERN_ERR "Timer already running!\n");
-		else
+		else 
 			start();
 	}
 	else if( !strncmp( "stop", buff, 4) )
 	{
-		if( n_param == 0 )
+		if( n_param == 0 || !correct_input )
 			printk(KERN_ERR "Please insert dd:hh:mm:ss first\n");
 		else if ( !running )
 			printk(KERN_ERR "Timer already stopped!\n");
@@ -443,12 +447,18 @@ ssize_t timer_write(struct file *pfile, const char __user *buffer, size_t length
 		n_param = sscanf( buff, "%u:%u:%u:%u", &days, &hours, &minutes, &seconds);
 		if( n_param == 4 )
 		{
-			num_of_cycles = ( ( ( ( (unsigned long long) ( days * 24 + hours ) ) * 60 + minutes ) * 60 + seconds ) * FREQ ) ;
-			printk(KERN_INFO "days:  %u   ,hours:   %u   , minutes:  %u  , seconds:  %u   \n", days, hours, minutes, seconds ); 
-			printk(KERN_INFO "num_of_cycles: %llu \n", num_of_cycles);
-			setup(num_of_cycles);
-			printk(KERN_INFO "Timer initialized successfully!\n");
-			running = 0;
+			if( !running )
+			{
+				num_of_cycles = ( ( ( ( (unsigned long long) ( days * 24 + hours ) ) * 60 + minutes ) * 60 + seconds ) * FREQ ) ;
+				printk(KERN_INFO "days:  %u   ,hours:   %u   , minutes:  %u  , seconds:  %u   \n", days, hours, minutes, seconds ); 
+				printk(KERN_INFO "num_of_cycles: %llu \n", num_of_cycles);
+				setup(num_of_cycles);
+				printk(KERN_INFO "Timer initialized successfully!\n");
+				running = 0;
+				correct_input = 1;
+			}
+			else
+				printk( KERN_WARNING "Timer is already running, first use 'stop' to halt it.\n");
 		}
 		else
 		{

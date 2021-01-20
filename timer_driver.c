@@ -111,11 +111,8 @@ MODULE_DEVICE_TABLE(of, timer_of_match);
 static irqreturn_t xilaxitimer_isr(int irq,void*dev_id)		
 {      
 	unsigned int timer_data = 0;
-	unsigned int timer0_data;
-	unsigned int timer1_data;
-	unsigned int timer1_data_again;
 
-	printk(KERN_INFO "interrupt occured\n");
+	printk(KERN_INFO "Time is up!\n");
 
 
 	// Clear Interrupt
@@ -124,32 +121,9 @@ static irqreturn_t xilaxitimer_isr(int irq,void*dev_id)
 			tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
 
 	running = 0;
-/*
-	timer_data = ioread32(tp->base_addr + XIL_AXI_TIMER_TCR1_OFFSET);
 
-
-	timer1_data = ioread32(tp->base_addr + XIL_AXI_TIMER_TCR1_OFFSET);
-	timer0_data = ioread32(tp->base_addr + XIL_AXI_TIMER_TCR0_OFFSET);
-	timer1_data_again = ioread32(tp->base_addr + XIL_AXI_TIMER_TCR1_OFFSET);
-
-	while( timer1_data != timer1_data_again )
-	{
-		timer1_data = timer1_data_again;
-		timer0_data = ioread32(tp->base_addr + XIL_AXI_TIMER_TCR0_OFFSET);
-		timer1_data_again = ioread32(tp->base_addr + XIL_AXI_TIMER_TCR1_OFFSET);		
-	}
-	timer_data = timer1_data_again;
-
-	if ( ~timer_data == 0 )
-	{
-		printk(KERN_NOTICE "Time is up!\n");
-		timer_data = ioread32(tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
-		iowrite32(timer_data & ~(XIL_AXI_TIMER_CSR_ENABLE_TMR_MASK), tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
-		timer_data = ioread32(tp->base_addr + XIL_AXI_TIMER_TCSR1_OFFSET);
-		iowrite32(timer_data & ~(XIL_AXI_TIMER_CSR_ENABLE_TMR_MASK), tp->base_addr + XIL_AXI_TIMER_TCSR1_OFFSET);
-		
-
-	}*/
+	timer_data = ioread32(tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
+	iowrite32(timer_data & ~(XIL_AXI_TIMER_CSR_ENABLE_TMR_MASK),tp->base_addr + XIL_AXI_TIMER_TCSR1_OFFSET);
 
 	return IRQ_HANDLED;
 }
@@ -377,10 +351,10 @@ ssize_t timer_read(struct file *pfile, char __user *buffer, size_t length, loff_
 	int ret;
 	long int len;
 	u64 num_of_cycles;
-	u32 days = 0;
-	u32 hours = 0;	
-	u32 minutes = 0;
-	u64 seconds = 0;
+	u64 days = 0;
+	u64 hours = 0;	
+	u64 minutes = 0;
+ 	u64 seconds = 0;
 
 	u32 timer0_data;
 	u32 timer1_data_again;
@@ -401,17 +375,21 @@ ssize_t timer_read(struct file *pfile, char __user *buffer, size_t length, loff_
 		timer0_data = ioread32(tp->base_addr + XIL_AXI_TIMER_TCR0_OFFSET);
 		timer1_data_again = ioread32(tp->base_addr + XIL_AXI_TIMER_TCR1_OFFSET);		
 	}
-	/*
+	
 	num_of_cycles = (u64) timer0_data + ( ( (u64) timer1_data ) << 32 );
 
-	days = (u32) ( ( num_of_cycles / 100000 )  /  ( 60 * 60 * 24 ) ); 
-	hours = (u32) ( ( num_of_cycles / 100000 )  /  ( 60 * 60 ) - days * 24); 
-	minutes = (u32) ( ( num_of_cycles / 100000 )  / 60  - ( days * 60 * 24 + hours * 60 )); 
-	seconds = (u32)  ( num_of_cycles / 100000  - ( minutes * 60 + days * 24 * 60 * 60 + hours * 60 * 60 )); 
-	*/
-	//scnprintf(buff, BUFF_SIZE, "%u:%u:%u:%u", days, hours, minutes, seconds);
-	seconds = num_of_cycles; 
-	scnprintf(buff, BUFF_SIZE, "%llu",seconds);
+	seconds = div_u64( num_of_cycles, FREQ );
+	minutes = div_u64( seconds, 60 );
+	hours = div_u64( minutes, 60 );
+	days = div_u64( hours, 24); 
+
+	hours -= 24 * days;
+	minutes -= ( 60 * ( hours + 24 * days ) );
+	seconds -= ( 60 * (minutes + 60 * ( hours + 24 * days ) ) ); 	
+	
+
+	scnprintf(buff, BUFF_SIZE, "%llu:%llu:%llu:%llu", days, hours, minutes, seconds);
+
 	len = strlen( buff );
 
 	ret = copy_to_user(buffer, buff, len);

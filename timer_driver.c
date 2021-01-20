@@ -41,6 +41,7 @@
 #define XIL_AXI_TIMER_CSR_DOWN_COUNT_MASK 	0x00000002
 #define XIL_AXI_TIMER_CSR_CAPTURE_MODE_MASK 	0x00000001
 
+#define FREQ 100000000
 #define BUFF_SIZE 40
 #define DRIVER_NAME "timer"
 #define DEVICE_NAME "xilaxitimer"
@@ -150,16 +151,13 @@ static irqreturn_t xilaxitimer_isr(int irq,void*dev_id)
 //***************************************************
 //HELPER FUNCTION THAT RESETS AND STARTS TIMER WITH PERIOD IN MILISECONDS
 
-static void setup(u64 milliseconds)
+static void setup(u64 num_of_cycles)
 {
 	// Disable Timer Counter
 	u32 timer0_load;
 	u32 timer1_load;
 	u32 timer0_reg;
 	u32 timer1_reg;
-
-	u64 num_of_cycles;
-	num_of_cycles = milliseconds * 100000;
 	
 	timer0_load = (u32) num_of_cycles;
 	timer1_load = (u32) (num_of_cycles >> 32);
@@ -235,6 +233,8 @@ static void start(void)
 			tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
 	
 	running = 1;
+
+	printk(KERN_INFO "Timer started! \n");
 }
 
 static void stop(void)
@@ -246,6 +246,8 @@ static void stop(void)
 			tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
 	
 	running = 0;
+
+	printk(KERN_INFO "Timer stoped! \n");
 	
 }
 
@@ -414,11 +416,11 @@ ssize_t timer_read(struct file *pfile, char __user *buffer, size_t length, loff_
 ssize_t timer_write(struct file *pfile, const char __user *buffer, size_t length, loff_t *offset) 
 {
 	char buff[BUFF_SIZE];
-	u64 milliseconds = 0;
 	u32 days = 0;
 	u32 hours = 0;	
 	u32 minutes = 0;
 	u32 seconds = 0;
+	u64 num_of_cycles = 0;
 	int ret = 0;
 
 
@@ -452,8 +454,8 @@ ssize_t timer_write(struct file *pfile, const char __user *buffer, size_t length
 		n_param = sscanf( buff, "%u:%u:%u:%u", &days, &hours, &minutes, &seconds);
 		if( n_param == 4 )
 		{
-			milliseconds = days * hours * minutes * seconds * 1000;
-			setup(milliseconds);
+			num_of_cycles = ( ( ( days * 24 + hours ) * 60 + minutes ) * 60 + seconds ) * FREQ;
+			setup(num_of_cycles);
 			printk(KERN_INFO "Timer initialized successfully!\n");
 		}
 		else

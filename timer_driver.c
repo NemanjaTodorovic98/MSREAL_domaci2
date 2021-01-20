@@ -143,6 +143,7 @@ static irqreturn_t xilaxitimer_isr(int irq,void*dev_id)
 		iowrite32(timer_data & ~(XIL_AXI_TIMER_CSR_ENABLE_TMR_MASK), tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
 		timer_data = ioread32(tp->base_addr + XIL_AXI_TIMER_TCSR1_OFFSET);
 		iowrite32(timer_data & ~(XIL_AXI_TIMER_CSR_ENABLE_TMR_MASK), tp->base_addr + XIL_AXI_TIMER_TCSR1_OFFSET);
+		running = 0;
 
 	}
 
@@ -162,13 +163,9 @@ static void setup(u64 num_of_cycles)
 	timer0_load = (u32) num_of_cycles;
 	timer1_load = (u32) (num_of_cycles >> 32);
 
-	/*
-	unsigned long days, hours, minuts, seconds;
-	days = ( milliseconds * 1000 ) / ( 60 * 60 * 24);
-	hours = days * 24 - ( milliseconds * 1000) / ( 60 * 60 );
-	minutes = hours * 60 - ( milliseconds * 1000 ) / 60;
-	seconds = minutes * 60 - ( milliseconds * 1000 );
-	*/
+	printk(KERN_INFO "timer0_load: %u \n" , timer0_load);
+	printk(KERN_INFO "timer0_load: %u \n" , timer1_load);
+
 	
 	// DISABLE T0 and T1
 	timer0_reg = ioread32(tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
@@ -195,7 +192,7 @@ static void setup(u64 num_of_cycles)
 		tp->base_addr + XIL_AXI_TIMER_TCSR1_OFFSET);
 
 	
-		timer0_reg = ioread32(tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
+	timer0_reg = ioread32(tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
 	timer1_reg = ioread32(tp->base_addr + XIL_AXI_TIMER_TCSR1_OFFSET);
 	iowrite32(timer0_reg & ~(XIL_AXI_TIMER_CSR_LOAD_MASK),
 			tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
@@ -457,6 +454,7 @@ ssize_t timer_write(struct file *pfile, const char __user *buffer, size_t length
 			num_of_cycles = ( ( ( days * 24 + hours ) * 60 + minutes ) * 60 + seconds ) * FREQ;
 			setup(num_of_cycles);
 			printk(KERN_INFO "Timer initialized successfully!\n");
+			running = 0;
 		}
 		else
 		{

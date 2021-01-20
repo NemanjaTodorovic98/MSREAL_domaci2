@@ -110,6 +110,9 @@ MODULE_DEVICE_TABLE(of, timer_of_match);
 static irqreturn_t xilaxitimer_isr(int irq,void*dev_id)		
 {      
 	u32 timer_data = 0;
+	u32 timer0_data;
+	u32 timer1_data;
+	u32 timer1_data_again;
 
 
 	// Clear Interrupt
@@ -118,6 +121,19 @@ static irqreturn_t xilaxitimer_isr(int irq,void*dev_id)
 			tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
 
 	timer_data = ioread32(tp->base_addr + XIL_AXI_TIMER_TCR1_OFFSET);
+
+
+	timer1_data = ioread32(tp->base_addr + XIL_AXI_TIMER_TCR1_OFFSET);
+	timer0_data = ioread32(tp->base_addr + XIL_AXI_TIMER_TCR0_OFFSET);
+	timer1_data_again = ioread32(tp->base_addr + XIL_AXI_TIMER_TCR1_OFFSET);
+
+	while( timer1_data != timer1_data_again )
+	{
+		timer1_data = timer1_data_again;
+		timer0_data = ioread32(tp->base_addr + XIL_AXI_TIMER_TCR0_OFFSET);
+		timer1_data_again = ioread32(tp->base_addr + XIL_AXI_TIMER_TCR1_OFFSET);		
+	}
+	timer_data = timer1_data;
 
 	if ( timer_data == 0)
 	{

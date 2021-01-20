@@ -161,8 +161,18 @@ static void setup(u64 num_of_cycles)
 	u32 timer0_reg;
 	u32 timer1_reg;
 	
+	union {
+		u64 long_int; 
+		u32 unsigned_int[2]; 
+	} theUnion;
+
+	theUnion.long_int = num_of_cycles;
+	timer0_load = theUnion.unsigned_int[0];
+	timer1_load = theUnion.unsigned_int[1];
+	/*
 	timer0_load = (unsigned int) num_of_cycles;
 	timer1_load = (unsigned int) (num_of_cycles >> 32);
+	*/
 	
 	printk(KERN_INFO "number_of_cycles: %llu \n" , num_of_cycles);
 	printk(KERN_INFO "timer0_load: %u \n" , timer0_load);
@@ -365,9 +375,9 @@ ssize_t timer_read(struct file *pfile, char __user *buffer, size_t length, loff_
 	int ret;
 	long int len;
 	u64 num_of_cycles;
-	unsigned int days = 0;
-	unsigned int hours = 0;	
-	unsigned int minutes = 0;
+	u32 days = 0;
+	u32 hours = 0;	
+	u32 minutes = 0;
 	u64 seconds = 0;
 
 	u32 timer0_data;
@@ -389,9 +399,9 @@ ssize_t timer_read(struct file *pfile, char __user *buffer, size_t length, loff_
 		timer0_data = ioread32(tp->base_addr + XIL_AXI_TIMER_TCR0_OFFSET);
 		timer1_data_again = ioread32(tp->base_addr + XIL_AXI_TIMER_TCR1_OFFSET);		
 	}
-	
-	num_of_cycles = (u64) timer0_data + ( ( (u64) timer1_data ) << 32 );
 	/*
+	num_of_cycles = (u64) timer0_data + ( ( (u64) timer1_data ) << 32 );
+
 	days = (u32) ( ( num_of_cycles / 100000 )  /  ( 60 * 60 * 24 ) ); 
 	hours = (u32) ( ( num_of_cycles / 100000 )  /  ( 60 * 60 ) - days * 24); 
 	minutes = (u32) ( ( num_of_cycles / 100000 )  / 60  - ( days * 60 * 24 + hours * 60 )); 

@@ -164,7 +164,7 @@ static void setup(u64 num_of_cycles)
 	timer1_load = (u32) (num_of_cycles >> 32);
 
 	printk(KERN_INFO "timer0_load: %u \n" , timer0_load);
-	printk(KERN_INFO "timer0_load: %u \n" , timer1_load);
+	printk(KERN_INFO "timer1_load: %u \n" , timer1_load);
 
 	
 	// DISABLE T0 and T1
@@ -452,6 +452,7 @@ ssize_t timer_write(struct file *pfile, const char __user *buffer, size_t length
 		if( n_param == 4 )
 		{
 			num_of_cycles = ( ( ( days * 24 + hours ) * 60 + minutes ) * 60 + seconds ) * FREQ;
+			printk(KERN_INFO "days:  %u   ,hours:   %u   , minutes:  %u  , seconds:  %u   \n", days, hours, minutes, seconds );   
 			setup(num_of_cycles);
 			printk(KERN_INFO "Timer initialized successfully!\n");
 			running = 0;

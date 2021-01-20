@@ -110,10 +110,10 @@ MODULE_DEVICE_TABLE(of, timer_of_match);
 
 static irqreturn_t xilaxitimer_isr(int irq,void*dev_id)		
 {      
-	u32 timer_data = 0;
-	u32 timer0_data;
-	u32 timer1_data;
-	u32 timer1_data_again;
+	unsigned int timer_data = 0;
+	unsigned int timer0_data;
+	unsigned int timer1_data;
+	unsigned int timer1_data_again;
 
 
 	// Clear Interrupt
@@ -155,13 +155,13 @@ static irqreturn_t xilaxitimer_isr(int irq,void*dev_id)
 static void setup(u64 num_of_cycles)
 {
 	// Disable Timer Counter
-	u32 timer0_load;
-	u32 timer1_load;
-	u32 timer0_reg;
-	u32 timer1_reg;
+	unsigned int timer0_load;
+	unsigned int timer1_load;
+	unsigned int timer0_reg;
+	unsigned int timer1_reg;
 	
-	timer0_load = (u32) num_of_cycles;
-	timer1_load = (u32) (num_of_cycles >> 32);
+	timer0_load = (unsigned int) num_of_cycles;
+	timer1_load = (unsigned int) (num_of_cycles >> 32);
 
 	printk(KERN_INFO "timer0_load: %u \n" , timer0_load);
 	printk(KERN_INFO "timer1_load: %u \n" , timer1_load);
@@ -223,7 +223,7 @@ static void setup(u64 num_of_cycles)
 
 static void start(void)
 {
-	u32 timer_reg;
+	unsigned int timer_reg;
 
 	timer_reg = ioread32(tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
 	iowrite32(timer_reg | (XIL_AXI_TIMER_CSR_ENABLE_TMR_MASK),
@@ -236,7 +236,7 @@ static void start(void)
 
 static void stop(void)
 {
-	u32 timer_reg;
+	unsigned int timer_reg;
 
 	timer_reg = ioread32(tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
 	iowrite32(timer_reg & ~(XIL_AXI_TIMER_CSR_ENABLE_TMR_MASK),
@@ -323,7 +323,7 @@ error1:
 static int timer_remove(struct platform_device *pdev)
 {
 	// Disable timer
-	u32 data=0;
+	unsigned int data=0;
 	data = ioread32(tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
 	iowrite32(data & ~(XIL_AXI_TIMER_CSR_ENABLE_TMR_MASK),
 			tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);
@@ -363,9 +363,9 @@ ssize_t timer_read(struct file *pfile, char __user *buffer, size_t length, loff_
 	int ret;
 	long int len;
 	u64 num_of_cycles;
-	u32 days = 0;
-	u32 hours = 0;	
-	u32 minutes = 0;
+	unsigned int days = 0;
+	unsigned int hours = 0;	
+	unsigned int minutes = 0;
 	u64 seconds = 0;
 
 	u32 timer0_data;
@@ -413,10 +413,10 @@ ssize_t timer_read(struct file *pfile, char __user *buffer, size_t length, loff_
 ssize_t timer_write(struct file *pfile, const char __user *buffer, size_t length, loff_t *offset) 
 {
 	char buff[BUFF_SIZE];
-	u32 days = 0;
-	u32 hours = 0;	
-	u32 minutes = 0;
-	u32 seconds = 0;
+	unsigned int days = 0;
+	unsigned int hours = 0;	
+	unsigned int minutes = 0;
+	unsigned int seconds = 0;
 	u64 num_of_cycles = 0;
 	int ret = 0;
 

@@ -465,6 +465,7 @@ ssize_t timer_write(struct file *pfile, const char __user *buffer, size_t length
 		{
 			num_of_cycles = ( ( ( days * 24 + hours ) * 60 + minutes ) * 60 + seconds ) * FREQ;
 			printk(KERN_INFO "days:  %u   ,hours:   %u   , minutes:  %u  , seconds:  %u   \n", days, hours, minutes, seconds ); 
+			printk(KERN_INFO "num_of_cycles: %llu \n", num_of_cycles);
 			num_of_cycles = 14294967296;  
 			setup(num_of_cycles);
 			printk(KERN_INFO "Timer initialized successfully!\n");

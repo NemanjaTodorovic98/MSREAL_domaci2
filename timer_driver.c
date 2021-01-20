@@ -136,9 +136,9 @@ static irqreturn_t xilaxitimer_isr(int irq,void*dev_id)
 		timer0_data = ioread32(tp->base_addr + XIL_AXI_TIMER_TCR0_OFFSET);
 		timer1_data_again = ioread32(tp->base_addr + XIL_AXI_TIMER_TCR1_OFFSET);		
 	}
-	timer_data = timer1_data;
+	timer_data = timer1_data_again;
 
-	if ( timer_data == 0)
+	if ( ~timer_data == 0 )
 	{
 		printk(KERN_NOTICE "Time is up!\n");
 		timer_data = ioread32(tp->base_addr + XIL_AXI_TIMER_TCSR0_OFFSET);

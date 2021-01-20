@@ -150,19 +150,19 @@ static irqreturn_t xilaxitimer_isr(int irq,void*dev_id)
 	return IRQ_HANDLED;
 }
 //***************************************************
-//HELPER FUNCTION THAT RESETS AND STARTS TIMER WITH PERIOD IN MILISECONDS
 
 static void setup(u64 num_of_cycles)
 {
 	// Disable Timer Counter
-	unsigned int timer0_load;
-	unsigned int timer1_load;
-	unsigned int timer0_reg;
-	unsigned int timer1_reg;
+	u32 timer0_load;
+	u32 timer1_load;
+	u32 timer0_reg;
+	u32 timer1_reg;
 	
 	timer0_load = (unsigned int) num_of_cycles;
 	timer1_load = (unsigned int) (num_of_cycles >> 32);
-
+	
+	printk(KERN_INFO "number_of_cycles: %llu \n" , number_of_cycles);
 	printk(KERN_INFO "timer0_load: %u \n" , timer0_load);
 	printk(KERN_INFO "timer1_load: %u \n" , timer1_load);
 
